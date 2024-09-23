@@ -60,6 +60,24 @@
 #define SEND_CSI_TO_SD 0
 #endif
 
+#ifdef CONFIG_SHOULD_SEND_CSI_BY_UDP
+#define SHOULD_SEND_CSI_BY_UDP 1
+#else
+#define SHOULD_SEND_CSI_BY_UDP 0
+#endif
+
+#ifdef CONFIG_DEST_IP_ADDR
+#define DEST_IP_ADDR CONFIG_DEST_IP_ADDR
+#else
+#define DEST_IP_ADDR ""
+#endif
+
+#ifdef CONFIG_DEST_UDP_PORT
+#define DEST_UDP_PORT CONFIG_DEST_UDP_PORT
+#else
+#define DEST_UDP_PORT 0
+#endif
+
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
 
@@ -135,6 +153,9 @@ void config_print() {
     printf("SHOULD_COLLECT_ONLY_LLTF: %d\n", SHOULD_COLLECT_ONLY_LLTF);
     printf("SEND_CSI_TO_SERIAL: %d\n", SEND_CSI_TO_SERIAL);
     printf("SEND_CSI_TO_SD: %d\n", SEND_CSI_TO_SD);
+    printf("SHOULD_SEND_CSI_BY_UDP: %d\n", SHOULD_SEND_CSI_BY_UDP);
+    printf("DEST_IP_ADDR: %s\n", DEST_IP_ADDR);
+    printf("DEST_UDP_PORT: %d\n", DEST_UDP_PORT);
     printf("-----------------------\n");
     printf("\n\n\n\n\n\n\n\n");
 }

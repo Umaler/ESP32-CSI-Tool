@@ -3,3 +3,11 @@ sdkconfig
 sdkconfig.old
 .idea
 venv
+
+*idf_config*
+*log.txt*
+
+*dependencies.lock
+*idf_component.yml
+*__pycache__*
+*.kate-swp

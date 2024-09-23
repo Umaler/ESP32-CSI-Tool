@@ -6,6 +6,8 @@
 #include <sstream>
 #include <iostream>
 
+#include "wifi_transmission_component.h"
+
 char *project_type;
 
 #define CSI_RAW 1
@@ -78,6 +80,9 @@ int8_t *my_ptr;
 #endif
     ss << "]\n";
 
+#if defined CONFIG_SHOULD_SEND_CSI_BY_UDP
+    transmit_data(ss.str());
+#endif
     printf(ss.str().c_str());
     fflush(stdout);
     vTaskDelay(0);
