@@ -12,4 +12,4 @@ while True:
     # Receive the client packet along with the address it is coming from
     message, _ = serverSocket.recvfrom(1024)
 
-    print(message.decode())
+    print(message)

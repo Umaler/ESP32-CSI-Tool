@@ -9,7 +9,7 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-#include <string>
+#include <string_view>
 
 #ifndef CONFIG_DEST_IP_ADDR
     #define CONFIG_DEST_IP_ADDR "192.168.4.3"
@@ -20,7 +20,11 @@
 #endif
 
 
-void transmit_data(const std::string& str) {
+SemaphoreHandle_t wifi_mutex = xSemaphoreCreateMutex();
+
+void transmit_data(const std::string_view str) {
+    xSemaphoreTake(wifi_mutex, portMAX_DELAY);
+
     struct sockaddr_in dest_addr;
     dest_addr.sin_addr.s_addr = inet_addr(CONFIG_DEST_IP_ADDR);
     dest_addr.sin_family = AF_INET;
@@ -39,7 +43,7 @@ void transmit_data(const std::string& str) {
 
     int err = 0;
     do {
-        err = sendto(sock, str.c_str(), str.size(), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+        err = sendto(sock, str.data(), str.size(), 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
         if(err < 0) {
             ESP_LOGE("E", "Error occurred during sending: errno %d", errno);
             break;
@@ -49,6 +53,8 @@ void transmit_data(const std::string& str) {
 
     shutdown(sock, SHUT_RDWR);
     close(sock);
+
+    xSemaphoreGive(wifi_mutex);
 }
 
 #endif //WIFI_TRANSMISSION_COMPONENT

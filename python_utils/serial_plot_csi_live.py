@@ -12,7 +12,7 @@ from socket import *
 
 signal.signal(signal.SIGINT, signal. SIG_DFL)
 
-mac_whitelist = "EC:64:C9:5D:B1:A4"
+mac_whitelist = "D0:EF:76:58:30:08"
 
 # Set subcarrier to plot
 subcarrier = 44

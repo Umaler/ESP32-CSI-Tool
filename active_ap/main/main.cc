@@ -19,6 +19,7 @@
 #include "../../_components/time_component.h"
 #include "../../_components/input_component.h"
 #include "../../_components/sockets_component.h"
+#include "../../_components/camera_component.h"
 
 /*
  * The examples use WiFi configuration that you can set via 'idf.py menuconfig'.
@@ -165,6 +166,7 @@ extern "C" void app_main() {
     nvs_init();
     sd_init();
     softap_init();
+    camera_init();
 
 #if !(SHOULD_COLLECT_CSI)
     printf("CSI will not be collected. Check `idf.py menuconfig  # > ESP32 CSI Tool Config` to enable CSI");
