@@ -1,10 +1,20 @@
 import sys
+import signal
 import matplotlib.pyplot as plt
+import matplotlib
 import math
+import time
 import numpy as np
 import collections
 from wait_timer import WaitTimer
 from read_stdin import readline, print_until_first_csi_line
+
+from socket import *
+
+signal.signal(signal.SIGINT, signal. SIG_DFL)
+#matplotlib.use("qt5agg")
+
+mac_whitelist = "EC:64:C9:5D:B1:A4"
 
 # Set subcarrier to plot
 subcarrier = 44
@@ -24,9 +34,18 @@ total_packet_counts = 0
 # Create figure for plotting
 plt.ion()
 fig = plt.figure()
+plt.pause(0.1)
 ax = fig.add_subplot(111)
 fig.canvas.draw()
-plt.show(block=False)
+#plt.show(block=True)
+#plt.show(block=False)
+
+# Create a UDP socket
+# Notice the use of SOCK_DGRAM for UDP packets
+serverSocket = socket(AF_INET, SOCK_DGRAM)
+
+# Assign IP address and port number to socket
+serverSocket.bind(('', 5000))
 
 
 def carrier_plot(amp):
@@ -40,8 +59,10 @@ def carrier_plot(amp):
     plt.title(f"Amplitude plot of Subcarrier {subcarrier}")
     # TODO use blit instead of flush_events for more fastness
     # to flush the GUI events
+    plt.draw()
+    fig.canvas.draw()
     fig.canvas.flush_events()
-    plt.show()
+    plt.pause(0.1)
 
 
 def process(res):
@@ -50,6 +71,9 @@ def process(res):
     csi_data = all_data[25].split(" ")
     csi_data[0] = csi_data[0].replace("[", "")
     csi_data[-1] = csi_data[-1].replace("]", "")
+
+    if all_data[2] != mac_whitelist:
+        return
 
     csi_data.pop()
     csi_data = [int(c) for c in csi_data if c]
@@ -74,10 +98,13 @@ def process(res):
         perm_phase.append(phases)
         perm_amp.append(amplitudes)
 
-print_until_first_csi_line()
+#print_until_first_csi_line()
 
 while True:
-    line = readline()
+    message, _ = serverSocket.recvfrom(1024)
+
+    line = message.decode()
+
     if "CSI_DATA" in line:
         process(line)
         packet_count += 1
