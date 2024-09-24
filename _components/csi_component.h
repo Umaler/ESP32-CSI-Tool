@@ -11,8 +11,8 @@
 char *project_type;
 
 #define CSI_RAW 1
-#define CSI_AMPLITUDE 0
-#define CSI_PHASE 0
+#define CSI_AMPLITUDE 1
+#define CSI_PHASE 1
 
 #define CSI_TYPE CSI_RAW
 
@@ -51,7 +51,7 @@ void _wifi_csi_cb(void *ctx, wifi_csi_info_t *data) {
        << d.rx_ctrl.rx_state << ","
        << real_time_set << ","
        << get_steady_clock_timestamp() << ","
-       << data->len << ",[";
+       << data->len;
 
 #if CONFIG_SHOULD_COLLECT_ONLY_LLTF
     int data_len = 128;
@@ -61,24 +61,30 @@ void _wifi_csi_cb(void *ctx, wifi_csi_info_t *data) {
 
 int8_t *my_ptr;
 #if CSI_RAW
+    ss << ",r[ ";
     my_ptr = data->buf;
     for (int i = 0; i < data_len; i++) {
         ss << (int) my_ptr[i] << " ";
     }
+    ss << "]";
 #endif
 #if CSI_AMPLITUDE
+    ss << ",a[ ";
     my_ptr = data->buf;
     for (int i = 0; i < data_len / 2; i++) {
         ss << (int) sqrt(pow(my_ptr[i * 2], 2) + pow(my_ptr[(i * 2) + 1], 2)) << " ";
     }
+    ss << "]";
 #endif
 #if CSI_PHASE
+    ss << ",p[ ";
     my_ptr = data->buf;
     for (int i = 0; i < data_len / 2; i++) {
         ss << (int) atan2(my_ptr[i*2], my_ptr[(i*2)+1]) << " ";
     }
+    ss << "]";
 #endif
-    ss << "]\n";
+    ss << "\n";
 
 #if defined CONFIG_SHOULD_SEND_CSI_BY_UDP
     transmit_data(ss.str());

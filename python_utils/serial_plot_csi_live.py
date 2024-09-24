@@ -7,12 +7,10 @@ import time
 import numpy as np
 import collections
 from wait_timer import WaitTimer
-from read_stdin import readline, print_until_first_csi_line
 
 from socket import *
 
 signal.signal(signal.SIGINT, signal. SIG_DFL)
-#matplotlib.use("qt5agg")
 
 mac_whitelist = "EC:64:C9:5D:B1:A4"
 
@@ -37,8 +35,6 @@ fig = plt.figure()
 plt.pause(0.1)
 ax = fig.add_subplot(111)
 fig.canvas.draw()
-#plt.show(block=True)
-#plt.show(block=False)
 
 # Create a UDP socket
 # Notice the use of SOCK_DGRAM for UDP packets
@@ -68,37 +64,53 @@ def carrier_plot(amp):
 def process(res):
     # Parser
     all_data = res.split(',')
-    csi_data = all_data[25].split(" ")
-    csi_data[0] = csi_data[0].replace("[", "")
-    csi_data[-1] = csi_data[-1].replace("]", "")
-
     if all_data[2] != mac_whitelist:
         return
 
-    csi_data.pop()
-    csi_data = [int(c) for c in csi_data if c]
-    imaginary = []
-    real = []
-    for i, val in enumerate(csi_data):
-        if i % 2 == 0:
-            imaginary.append(val)
-        else:
-            real.append(val)
-
-    csi_size = len(csi_data)
+    csi_data = []
     amplitudes = []
     phases = []
-    if len(imaginary) > 0 and len(real) > 0:
-        for j in range(int(csi_size / 2)):
-            amplitude_calc = math.sqrt(imaginary[j] ** 2 + real[j] ** 2)
-            phase_calc = math.atan2(imaginary[j], real[j])
-            amplitudes.append(amplitude_calc)
-            phases.append(phase_calc)
+    for i in range(25, len(all_data)):
+        data = all_data[i].split(" ")
+        ident = data[0][0]
+        del data[0]
+        del data[-1]
+        data = [int(c) for c in data if c]
+        match ident:
+            case "r":
+                csi_data = data
+            case "a":
+                amplitudes = data
+            case "p":
+                phases = data
+            case _:
+                print(f'Unknown id during processing line: {ident}')
 
+    imaginary = []
+    real = []
+
+    if (not amplitudes or not phases) and csi_data:
+        for i, val in enumerate(csi_data):
+            if i % 2 == 0:
+                imaginary.append(val)
+            else:
+                real.append(val)
+
+    if not amplitudes and not phases:
+        csi_size = len(csi_data)
+        if len(imaginary) > 0 and len(real) > 0:
+            for j in range(int(csi_size / 2)):
+                if not amplitudes:
+                    amplitude_calc = math.sqrt(imaginary[j] ** 2 + real[j] ** 2)
+                    amplitudes.append(amplitude_calc)
+                if not phases:
+                    phase_calc = math.atan2(imaginary[j], real[j])
+                    phases.append(phase_calc)
+
+    if phases:
         perm_phase.append(phases)
+    if amplitudes:
         perm_amp.append(amplitudes)
-
-#print_until_first_csi_line()
 
 while True:
     message, _ = serverSocket.recvfrom(1024)
