@@ -7,9 +7,20 @@ serverSocket = socket(AF_INET, SOCK_DGRAM)
 # Assign IP address and port number to socket
 serverSocket.bind(('', 5000))
 
-while True:
+filename = 'test_2.csv'
+packet_count = 3000
+count = 0
 
-    # Receive the client packet along with the address it is coming from
-    message, _ = serverSocket.recvfrom(1024)
+with open(filename, 'w') as f:
+    while True:
 
-    print(message)
+        # Receive the client packet along with the address it is coming from
+        message, _ = serverSocket.recvfrom(1024)
+        string = message.decode()
+
+        print(count, string)
+        f.write(string)
+
+        count += 1
+        if count >= packet_count:
+            break
