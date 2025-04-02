@@ -11,8 +11,8 @@
 char *project_type;
 
 #define CSI_RAW 1
-#define CSI_AMPLITUDE 1
-#define CSI_PHASE 1
+#define CSI_AMPLITUDE 0
+#define CSI_PHASE 0
 
 #define CSI_TYPE CSI_RAW
 

@@ -11,3 +11,7 @@ venv
 *idf_component.yml
 *__pycache__*
 *.kate-swp
+
+*.csv
+*.raw
+*.zip

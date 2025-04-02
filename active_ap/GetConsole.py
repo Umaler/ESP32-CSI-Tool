@@ -1,12 +1,9 @@
 import math
 import os
-import serial
 
 mac_whitelist = "D0:EF:76:58:30:08"
 
 file_name = 'test_1.csv'
-
-packets_n = 3000
 
 def process(res):
     # Parser
@@ -74,14 +71,9 @@ def main():
             open(f'real_{file_name}', 'w') as real_f,
             open(f'ampl_{file_name}', 'w') as ampl_f,
             open(f'phas_{file_name}', 'w') as phas_f,
-            serial.Serial('/dev/ttyUSB1', 115200, timeout=1) as ser,
          ):
-        n = 0
         while True:
-            if n >= packets_n:
-                return
-            line = ser.readline().decode()
-            print(line)
+            line = input()
             ret_val = process(line)
             if ret_val:
                 im, real, ampl, ph = ret_val
@@ -91,7 +83,5 @@ def main():
             write_str_to_csv(real_f, real)
             write_str_to_csv(ampl_f, ampl)
             write_str_to_csv(phas_f, ph)
-            n += 1
-            print(n)
 
 main()
