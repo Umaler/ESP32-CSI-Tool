@@ -78,4 +78,19 @@ menu "ESP32 CSI Tool Config"
         help
             Destination port
 
+    config CONFIG_KEEP_UDP_SOCKET
+        depends on SHOULD_SEND_CSI_BY_UDP
+        bool "Keep UDP connection"
+        default "y"
+        help
+            Keep UDP connection to server
+
+    config TRANSMIT_CSI_BY_UDP_AS_TEXT
+        depends on SHOULD_SEND_CSI_BY_UDP
+        bool "Transmit CSI by UDP as text"
+        default "n"
+        help
+            If it's enabled then data will be transmitted like in USB
+            If it's disabled then data will be transmitted in binary (check wifi_transmission_component.h)
+
 endmenu

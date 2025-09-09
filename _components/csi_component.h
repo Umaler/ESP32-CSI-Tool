@@ -3,8 +3,10 @@
 
 #include "time_component.h"
 #include "math.h"
+#include <array>
 #include <sstream>
 #include <iostream>
+#include <vector>
 
 #include "wifi_transmission_component.h"
 
@@ -20,6 +22,14 @@ SemaphoreHandle_t mutex = xSemaphoreCreateMutex();
 
 void _wifi_csi_cb(void *ctx, wifi_csi_info_t *data) {
     xSemaphoreTake(mutex, portMAX_DELAY);
+
+#if SHOULD_COLLECT_ONLY_LLTF
+    unsigned int data_len = 128;
+#else
+    unsigned int data_len = data->len;
+#endif
+
+#if SEND_CSI_TO_SERIAL
     std::stringstream ss;
 
     wifi_csi_info_t d = data[0];
@@ -53,12 +63,6 @@ void _wifi_csi_cb(void *ctx, wifi_csi_info_t *data) {
        << get_steady_clock_timestamp() << ","
        << data->len;
 
-#if CONFIG_SHOULD_COLLECT_ONLY_LLTF
-    int data_len = 128;
-#else
-    int data_len = data->len;
-#endif
-
 int8_t *my_ptr;
 #if CSI_RAW
     ss << ",r[ ";
@@ -86,11 +90,58 @@ int8_t *my_ptr;
 #endif
     ss << "\n";
 
-#if defined CONFIG_SHOULD_SEND_CSI_BY_UDP
+#if SHOULD_SEND_CSI_BY_UDP
+    #if TRANSMIT_CSI_BY_UDP_AS_TEXT
     transmit_data(ss.str());
+    #endif
 #endif
     printf(ss.str().c_str());
     fflush(stdout);
+#endif // SEND_CSI_TO_SERIAL
+
+#if SHOULD_SEND_CSI_BY_UDP
+#if !TRANSMIT_CSI_BY_UDP_AS_TEXT
+    /* Header:
+     * 1. rssi
+     * 2. rate
+     * 3. channel
+     * 4. secondary_channel
+     * 5-10. tx mac
+     * 11-12. data->len as little endian
+     */
+
+    const auto& rc = data->rx_ctrl;
+
+    constexpr unsigned int header_size = 10;
+    const uint16_t transmitted_data_size = header_size + data_len;
+
+    std::vector<uint8_t> transmitted_data(transmitted_data_size);
+    // construct header
+    transmitted_data[0] = rc.rssi;
+    transmitted_data[1] = rc.rate;
+    transmitted_data[2] = rc.channel;
+    transmitted_data[3] = rc.secondary_channel;
+    for(unsigned int i = 4; i < 10; i++) {
+        transmitted_data[i] = data->mac[i-4];
+    }
+    transmitted_data[10] = transmitted_data_size & 0xFF00;
+    transmitted_data[11] = transmitted_data_size & 0x00FF;
+#if 0
+    else {
+        // swap bytes
+        transmitted_data[10] = transmitted_data_size & 0x00FF;
+        transmitted_data[11] = transmitted_data_size & 0xFF00;
+    }
+#endif
+    // set data
+    for(unsigned int i = 0; i < data_len; i++) {
+        transmitted_data[i] = data->buf[i];
+    }
+
+    transmit_data(transmitted_data);
+#endif
+#endif // SHOULD_SEND_CSI_BY_UDP
+
     vTaskDelay(0);
     xSemaphoreGive(mutex);
 }
